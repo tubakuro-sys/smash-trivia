@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スマブラSP 豆知識クイズ</title>
+<style>
+:root {
+  --bg: #f4f1ea;
+  --card: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6b6b70;
+  --line: #e2ded4;
+  --accent: #d6301f;
+  --accent-text: #ffffff;
+  --gold: #c9971c;
+  --ok: #1f8a4c;
+  --ok-bg: #e5f4ea;
+  --ng: #c62828;
+  --ng-bg: #fbe8e8;
+  --easy: #2e8b57;
+  --normal: #d48a00;
+  --hard: #c62828;
+  --mix: #5b4bc4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121214;
+    --card: #1e1e22;
+    --text: #f2f2f4;
+    --muted: #a0a0a8;
+    --line: #34343a;
+    --accent: #ff5a45;
+    --accent-text: #ffffff;
+    --gold: #f0c04a;
+    --ok: #4cc77f;
+    --ok-bg: #173323;
+    --ng: #ff6b6b;
+    --ng-bg: #3a1c1c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+}
+.wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
+header { text-align: center; margin-bottom: 20px; }
+.logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-text);
+  font-size: 28px; font-weight: 800; margin-bottom: 8px;
+  box-shadow: inset 0 0 0 4px rgba(255,255,255,.35);
+}
+h1 { font-size: 22px; margin: 0; letter-spacing: .02em; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 16px; padding: 18px; margin-bottom: 14px;
+}
+.label { font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 0 10px; }
+.levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.level {
+  border: 2px solid var(--line); background: var(--card); color: var(--text);
+  border-radius: 12px; padding: 12px 10px; text-align: left; cursor: pointer;
+  font: inherit;
+}
+.level b { display: block; font-size: 16px; }
+.level small { color: var(--muted); font-size: 12px; }
+.level .best { display: block; font-size: 11px; color: var(--gold); margin-top: 2px; min-height: 1em; }
+.level[data-lv="easy"] b { color: var(--easy); }
+.level[data-lv="normal"] b { color: var(--normal); }
+.level[data-lv="hard"] b { color: var(--hard); }
+.level[data-lv="mix"] b { color: var(--mix); }
+.level.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.counts { display: flex; gap: 8px; }
+.count {
+  flex: 1; border: 2px solid var(--line); background: var(--card); color: var(--text);
+  border-radius: 10px; padding: 10px 0; font: inherit; font-weight: 700; cursor: pointer;
+}
+.count.selected { border-color: var(--accent); color: var(--accent); }
+.btn {
+  display: block; width: 100%; border: none; border-radius: 12px;
+  background: var(--accent); color: var(--accent-text);
+  font: inherit; font-size: 17px; font-weight: 800; padding: 14px; cursor: pointer;
+}
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.ghost { background: transparent; color: var(--text); border: 2px solid var(--line); font-weight: 700; }
+.btn + .btn { margin-top: 10px; }
+.weak-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.weak-row p { margin: 0; font-size: 14px; }
+.weak-row .btn { width: auto; padding: 10px 16px; font-size: 14px; }
+.note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 16px; }
+
+/* quiz */
+.topbar { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.tag { font-weight: 800; padding: 2px 10px; border-radius: 999px; color: #fff; font-size: 12px; }
+.progress { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+.progress div { height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+.qno { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.question { font-size: 18px; font-weight: 700; margin: 0 0 16px; }
+.choices { display: grid; gap: 10px; }
+.choice {
+  border: 2px solid var(--line); background: var(--card); color: var(--text);
+  border-radius: 12px; padding: 13px 14px; text-align: left;
+  font: inherit; font-size: 15px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start;
+}
+.choice .k { font-weight: 800; color: var(--muted); min-width: 1.2em; }
+.choice.correct { border-color: var(--ok); background: var(--ok-bg); }
+.choice.wrong { border-color: var(--ng); background: var(--ng-bg); }
+.choice:disabled { cursor: default; }
+.feedback { margin-top: 14px; border-radius: 12px; padding: 14px; display: none; }
+.feedback.show { display: block; }
+.feedback.ok { background: var(--ok-bg); }
+.feedback.ng { background: var(--ng-bg); }
+.feedback .verdict { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
+.feedback.ok .verdict { color: var(--ok); }
+.feedback.ng .verdict { color: var(--ng); }
+.feedback p { margin: 0; font-size: 14px; }
+#nextBtn { margin-top: 14px; display: none; }
+.quit { background: none; border: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; padding: 0; }
+
+/* result */
+.score { text-align: center; }
+.score .big { font-size: 48px; font-weight: 800; line-height: 1.1; }
+.score .big span { font-size: 22px; color: var(--muted); }
+.score .rate { font-size: 15px; color: var(--muted); }
+.score .rank { font-size: 18px; font-weight: 800; margin-top: 8px; }
+.score .newbest { color: var(--gold); font-weight: 800; font-size: 13px; margin-top: 4px; }
+.miss { border-top: 1px solid var(--line); padding: 12px 0; font-size: 14px; }
+.miss:first-of-type { border-top: none; }
+.miss .mq { font-weight: 700; margin-bottom: 4px; }
+.miss .ma { color: var(--ok); font-weight: 700; }
+.miss .my { color: var(--ng); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- スタート画面 -->
+  <section id="start">
+    <header>
+      <div class="logo">SP</div>
+      <h1>スマブラSP 豆知識クイズ</h1>
+      <div class="sub">全<span id="totalCount"></span>問・4択</div>
+    </header>
+
+    <div class="card">
+      <p class="label">難易度を選ぶ</p>
+      <div class="levels">
+        <button class="level" data-lv="easy"><b>初級</b><small>ファイターの出身作・基本</small><span class="best"></span></button>
+        <button class="level" data-lv="normal"><b>中級</b><small>ステージ・ワザ・切りふだ</small><span class="best"></span></button>
+        <button class="level" data-lv="hard"><b>上級</b><small>販売本数・声優・アプデ</small><span class="best"></span></button>
+        <button class="level" data-lv="mix"><b>ミックス</b><small>全難易度からランダム</small><span class="best"></span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="label">問題数</p>
+      <div class="counts">
+        <button class="count" data-n="10">10問</button>
+        <button class="count" data-n="20">20問</button>
+        <button class="count" data-n="0">全部</button>
+      </div>
+    </div>
+
+    <button class="btn" id="startBtn" disabled>スタート</button>
+
+    <div class="card" id="weakCard" style="margin-top:14px">
+      <div class="weak-row">
+        <p>📕 苦手リスト：<b id="weakCount">0</b>問</p>
+        <button class="btn" id="weakBtn">復習する</button>
+      </div>
+    </div>
+
+    <p class="note">『大乱闘スマッシュブラザーズ SPECIAL』Ver.13.0.3 時点の情報をもとに作成</p>
+  </section>
+
+  <!-- クイズ画面 -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <span class="tag" id="lvTag"></span>
+      <span id="scoreNow"></span>
+      <button class="quit" id="quitBtn">やめる</button>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="card">
+      <div class="qno" id="qno"></div>
+      <p class="question" id="question"></p>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback">
+        <div class="verdict" id="verdict"></div>
+        <p id="explain"></p>
+      </div>
+      <button class="btn" id="nextBtn">次へ</button>
+    </div>
+  </section>
+
+  <!-- 結果画面 -->
+  <section id="result" class="hidden">
+    <div class="card score">
+      <div class="big" id="resScore"></div>
+      <div class="rate" id="resRate"></div>
+      <div class="rank" id="resRank"></div>
+      <div class="newbest" id="resBest"></div>
+    </div>
+    <div class="card" id="missCard">
+      <p class="label">間違えた問題</p>
+      <div id="missList"></div>
+    </div>
+    <button class="btn" id="retryMissBtn">間違えた問題だけもう一度</button>
+    <button class="btn" id="againBtn">同じ設定でもう一度</button>
+    <button class="btn ghost" id="homeBtn">トップに戻る</button>
+  </section>
+
+</div>
+
+<script src="questions.js"></script>
+<script>
+const LV = {
+  easy:   { name: "初級",     color: "var(--easy)" },
+  normal: { name: "中級",     color: "var(--normal)" },
+  hard:   { name: "上級",     color: "var(--hard)" },
+  mix:    { name: "ミックス", color: "var(--mix)" },
+  weak:   { name: "苦手復習", color: "var(--accent)" }
+};
+const KEYS = ["A", "B", "C", "D"];
+const STORE_KEY = "smash-trivia-v1";
+
+// 全問題に難易度を付けてフラットにする
+const ALL = [];
+for (const lv of ["easy", "normal", "hard"]) {
+  QUESTIONS[lv].forEach(q => ALL.push({ ...q, lv }));
+}
+
+// 保存データ（ベストスコア・苦手リスト）
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+}
+function save(d) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {}
+}
+let store = load();
+store.best = store.best || {};
+store.weak = store.weak || [];
+
+const $ = id => document.getElementById(id);
+const shuffle = arr => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+let selLv = null, selN = null;
+let deck = [], idx = 0, correct = 0, misses = [], curLv = null, lastSetting = null, isRetry = false;
+
+function show(id) {
+  for (const s of ["start", "quiz", "result"]) $(s).classList.toggle("hidden", s !== id);
+  window.scrollTo(0, 0);
+}
+
+function renderStart() {
+  $("totalCount").textContent = ALL.length;
+  document.querySelectorAll(".level").forEach(b => {
+    const lv = b.dataset.lv;
+    const best = store.best[lv];
+    b.querySelector(".best").textContent = best ? `ベスト正答率 ${best}%` : "";
+    b.classList.toggle("selected", lv === selLv);
+  });
+  document.querySelectorAll(".count").forEach(b => b.classList.toggle("selected", b.dataset.n === selN));
+  $("startBtn").disabled = !(selLv && selN !== null);
+  const wc = store.weak.length;
+  $("weakCount").textContent = wc;
+  $("weakBtn").disabled = wc === 0;
+}
+
+function pool(lv) {
+  if (lv === "mix") return ALL;
+  if (lv === "weak") return ALL.filter(q => store.weak.includes(q.q));
+  return ALL.filter(q => q.lv === lv);
+}
+
+function startQuiz(lv, n, list) {
+  curLv = lv;
+  isRetry = !!list;
+  if (!list) lastSetting = { lv, n };
+  let qs = list ? list.slice() : shuffle(pool(lv));
+  if (!list && n > 0) qs = qs.slice(0, n);
+  deck = shuffle(qs);
+  idx = 0; correct = 0; misses = [];
+  $("lvTag").textContent = LV[lv].name;
+  $("lvTag").style.background = LV[lv].color;
+  show("quiz");
+  renderQ();
+}
+
+function renderQ() {
+  const q = deck[idx];
+  $("qno").textContent = `第${idx + 1}問 / ${deck.length}問` + (curLv === "mix" || curLv === "weak" ? `（${LV[q.lv].name}）` : "");
+  $("question").textContent = q.q;
+  $("scoreNow").textContent = `正解 ${correct}`;
+  $("bar").style.width = `${(idx / deck.length) * 100}%`;
+  $("feedback").className = "feedback";
+  $("nextBtn").style.display = "none";
+  const box = $("choices");
+  box.innerHTML = "";
+  shuffle(q.a).forEach((text, i) => {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = `<span class="k">${KEYS[i]}</span><span></span>`;
+    b.lastChild.textContent = text;
+    b.onclick = () => answer(b, text);
+    box.appendChild(b);
+  });
+}
+
+function answer(btn, text) {
+  const q = deck[idx];
+  const ok = text === q.a[0];
+  document.querySelectorAll(".choice").forEach(b => {
+    b.disabled = true;
+    if (b.lastChild.textContent === q.a[0]) b.classList.add("correct");
+  });
+  if (ok) {
+    correct++;
+    if (curLv === "weak") store.weak = store.weak.filter(x => x !== q.q);
+  } else {
+    btn.classList.add("wrong");
+    misses.push({ ...q, my: text });
+    if (!store.weak.includes(q.q)) store.weak.push(q.q);
+  }
+  save(store);
+  $("verdict").textContent = ok ? "⭕ 正解！" : `❌ 不正解… 正解は「${q.a[0]}」`;
+  $("explain").textContent = q.e;
+  $("feedback").className = "feedback show " + (ok ? "ok" : "ng");
+  $("scoreNow").textContent = `正解 ${correct}`;
+  $("bar").style.width = `${((idx + 1) / deck.length) * 100}%`;
+  $("nextBtn").textContent = idx + 1 < deck.length ? "次へ" : "結果を見る";
+  $("nextBtn").style.display = "block";
+}
+
+function rankText(rate) {
+  if (rate === 100) return "🏆 スマブラ博士！パーフェクト！";
+  if (rate >= 80) return "🔥 かなりのスマブラ通！";
+  if (rate >= 60) return "👍 なかなかの実力！";
+  if (rate >= 40) return "🙂 まだまだ伸びしろあり！";
+  return "💪 復習してリベンジしよう！";
+}
+
+function showResult() {
+  const rate = Math.round((correct / deck.length) * 100);
+  $("resScore").innerHTML = `${correct}<span> / ${deck.length}</span>`;
+  $("resRate").textContent = `正答率 ${rate}%`;
+  $("resRank").textContent = rankText(rate);
+  $("resBest").textContent = "";
+  if (curLv !== "weak" && !isRetry && deck.length >= 10) {
+    const prev = store.best[curLv] || 0;
+    if (rate > prev) {
+      store.best[curLv] = rate;
+      save(store);
+      if (prev > 0) $("resBest").textContent = "★ ベスト更新！";
+    }
+  }
+  const list = $("missList");
+  list.innerHTML = "";
+  misses.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "miss";
+    d.innerHTML = `<div class="mq"></div><div>正解：<span class="ma"></span></div><div>あなた：<span class="my"></span></div>`;
+    d.querySelector(".mq").textContent = m.q;
+    d.querySelector(".ma").textContent = m.a[0];
+    d.querySelector(".my").textContent = m.my;
+    list.appendChild(d);
+  });
+  $("missCard").classList.toggle("hidden", misses.length === 0);
+  $("retryMissBtn").classList.toggle("hidden", misses.length === 0);
+  show("result");
+}
+
+// イベント
+document.querySelectorAll(".level").forEach(b => b.onclick = () => { selLv = b.dataset.lv; renderStart(); });
+document.querySelectorAll(".count").forEach(b => b.onclick = () => { selN = b.dataset.n; renderStart(); });
+$("startBtn").onclick = () => startQuiz(selLv, Number(selN));
+$("weakBtn").onclick = () => startQuiz("weak", 0);
+$("nextBtn").onclick = () => { idx++; idx < deck.length ? renderQ() : showResult(); };
+$("quitBtn").onclick = () => { if (confirm("クイズをやめてトップに戻りますか？")) { renderStart(); show("start"); } };
+$("retryMissBtn").onclick = () => startQuiz(curLv, 0, misses.map(({ my, ...q }) => q));
+$("againBtn").onclick = () => startQuiz(lastSetting.lv, lastSetting.n);
+$("homeBtn").onclick = () => { renderStart(); show("start"); };
+
+renderStart();
+</script>
+</body>
+</html>
